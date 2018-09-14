@@ -106,11 +106,12 @@ void CEditDlg::OnNMRClickEditList(NMHDR *pNMHDR, LRESULT *pResult)
 	menu.LoadMenu(IDR_MENU);
 	CMenu* popup = menu.GetSubMenu(0);
 
-	if(pNMListView->iItem != -1)
+	if(pNMListView->iItem != -1)//有选中
 	{
-		
+		CString idnum = m_edit_list.GetItemText(pNMListView->iItem, 0);//获取选择的ID
+		IDNUM = _ttoi(idnum);//转换成整数
 	}
-	else
+	else//未显示任何项
 	{
 		popup->EnableMenuItem(ID_1,MF_BYCOMMAND|MF_ENABLED);  //允许新建菜单项使用
 		popup->EnableMenuItem(ID_2,MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);  //不允许编辑菜单项使用
@@ -134,12 +135,28 @@ void CEditDlg::On1()//新建用户
 }
 
 
-void CEditDlg::On2()//不需要跳转
+void CEditDlg::On2()//表示删除用户//不需要跳转
 {
 	// TODO: 在此添加命令处理程序代码
-	CEditUserDlg edituserdlg;
-	edituserdlg.Buttonstatus = 2;//表示删除用户
-	edituserdlg.DoModal();
+	int ret;
+	CString log;
+	log.Format("确认删除 ID:%04d账户吗？",IDNUM);
+	ret = MessageBox( _T(log) , TEXT(TiShi) ,MB_OKCANCEL);
+	if(ret == IDCANCEL)
+	{
+		return;
+	}
+	ret = CEditUserDlg::DelUserInfo(IDNUM);
+	if(ret == 0)
+	{
+		log.Format("删除 ID:%04d成功！",IDNUM);
+		MessageBox( _T(log) , TEXT(TiShi) ,MB_OK);
+	}
+	else
+	{
+		log.Format("删除 ID:%04d失败！",IDNUM);
+		MessageBox( _T(log) , TEXT(TiShi) ,MB_OK);
+	}
 }
 
 

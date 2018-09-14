@@ -34,8 +34,9 @@ public:
 	afx_msg void OnBnClickedCancel();
 	void InitComboView();
 	static int AddUserInfo(CUserInfo &userinfo);
-	static int DelUserInfo(CUserInfo &userinfo);
+	static int DelUserInfo(int ID);
 	static int EditUserInfo(CUserInfo &userinfo);
+	static int ReadUserInfo(CUserInfo &userinfo,int seek);
 	static int UserDataPack(CUserInfo &userinfo,BYTE *userdata);
 	static int UserDataExplan(BYTE *userdata,CUserInfo &userinfo);
 

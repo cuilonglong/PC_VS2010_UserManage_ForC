@@ -181,8 +181,14 @@ void CEditUserDlg::OnBnClickedEditSaveButton()
 		userinfo.startime = userinfo.lasttime;
 		userinfo.status = 1;
 		ret = AddUserInfo(userinfo);
+		if(ret != 0)
+		{
+			goto err;
+		}
 	}
 	CDialogEx::OnOK();
+err:
+	return;
 }
 
 
@@ -194,53 +200,145 @@ void CEditUserDlg::OnBnClickedCancel()
 
 
 /*
-对用户数据进行添加、删除、编辑等操作
+对用户数据进行添加、删除、编辑、读取等操作
 */
 int CEditUserDlg::AddUserInfo(CUserInfo &userinfo)
 {
 	CFile file;
 	CString password;
-	int errnum,time[4],usernum;
+	int errnum,time[4],usernum,ret;
 	BYTE userdata[USERINFOLEN];
+	CUserInfo userinfo1;
 	
 	file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
-	CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	if(ret != 0){
+		::MessageBox( NULL,_T("添加用户获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+
 	if(usernum >= USERNUMMAX)//用户超过上限
 	{
 		::MessageBox( NULL,_T("用户数量超过上限，请联系管理员！") , TEXT(TiShi) ,MB_OK);
-		file.Close();
-		return 1;
+		ret = 1;
+		goto Err;
 	}
+
+	int index = 0;
+	do
+	{
+		CUserInfo userinfo;
+		if(ReadUserInfo(userinfo,index))//该索引存储用户有效
+		{
+			index++;
+		}
+		else
+			break;
+		
+	}
+	while(index < USERNUMMAX);
+
 	usernum++;
-	CUserManageSysDlg::EditFileHead(file,errnum,time,usernum);//更新增加的用户个数
-	UserDataPack(userinfo,userdata);
-	file.Seek(USERDATAADD+(usernum -1)*USERINFOLEN,CFile::begin);
+	ret = CUserManageSysDlg::EditFileHead(file,errnum,time,usernum);//更新增加的用户个数
+	if(ret != 0){
+		::MessageBox( NULL,_T("添加用户设置用户个数数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+
+	ret = UserDataPack(userinfo,userdata);
+	if(ret != 0){
+		::MessageBox( NULL,_T("添加用户组包数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+	file.Seek(USERDATAADD+ index*USERINFOLEN,CFile::begin);
 	file.Write(userdata,USERINFOLEN);
+	goto SUCESS;
+
+Err:
+	file.Close();
+	return ret;
+
+SUCESS:
+	::MessageBox( NULL,_T("添加用户成功！") , TEXT(TiShi) ,MB_OK);
 	file.Close();
 	return 0;
 }
 
-int CEditUserDlg::DelUserInfo(CUserInfo &userinfo)
+int CEditUserDlg::DelUserInfo(int ID)
 {
 	return 0;
 }
 
 int CEditUserDlg::EditUserInfo(CUserInfo &userinfo)
 {
+	CFile file;
+
+
 	return 0;
 }
 
 /*
-用户数据組包
+读取对应地址的用户数据
+seek:绝对偏差地址倍数，从USERDATAADD开始，seek*USERINFOLEN（须从0开始遍历）
+返回 0,存在
+返回 other不存在
+*/
+
+int CEditUserDlg::ReadUserInfo(CUserInfo &userinfo,int seek)
+{
+	int ret;
+	CFile file;
+	CString password;
+	BYTE userdata[USERINFOLEN];
+	int errnum,time[4],usernum;
+	
+	file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	if(ret != 0){
+		//::MessageBox( NULL,_T("读取用户获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+	if(usernum == 0)
+	{
+		ret = 1;
+		goto Err;//未存储账户数据
+	}
+	file.Seek(USERDATAADD+ seek*USERINFOLEN,CFile::begin);
+	file.Read(userdata,USERINFOLEN);
+	ret = UserDataExplan(userdata,userinfo);
+	if((ret != 0)||(userinfo.status != 1)){
+		//::MessageBox( NULL,_T("读取用户解析数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+	else if(userinfo.status == 1)
+	{
+		goto SUCESS;
+	}
+Err:
+	file.Close();
+	return ret;
+
+SUCESS:
+	//::MessageBox( NULL,_T("读取用户成功！") , TEXT(TiShi) ,MB_OK);
+	file.Close();
+	return 0;
+}
+
+/*
+用户数据組包BYTE
+in:userinfo
+out:userdata
 */
 int CEditUserDlg::UserDataPack(CUserInfo &userinfo,BYTE *userdata)
 {
+	int ret;
 	uchar key[16];
 
 	memset(userdata,0,USERINFOLEN);
 	memcpy(userdata + STATUSADD,(BYTE *)&(userinfo.status),1);
-	memcpy(userdata + USERIDADD,(BYTE *)&(userinfo.userid),USERIDLEN);//以上明文存储
-	memcpy(userdata + PORTADD,(BYTE *)&(userinfo.port),PORTLEN);
+	memcpy(userdata + USERIDADD,(BYTE *)&(userinfo.userid),USERIDLEN);
+	memcpy(userdata + PORTADD,(BYTE *)&(userinfo.port),PORTLEN);//以上明文存储
+
 	memcpy(userdata + USERSTATUSADD,(BYTE *)&(userinfo.userstatus),USERSTATUSLEN);
 	memcpy(userdata + QQNUMADD,(BYTE *)userinfo.qqNum.GetBuffer(),QQNUMLEN);
 	memcpy(userdata + USERIPADD,(BYTE *)userinfo.userip.GetBuffer(),USERIPLEN);
@@ -250,15 +348,66 @@ int CEditUserDlg::UserDataPack(CUserInfo &userinfo,BYTE *userdata)
 	memcpy(userdata + STARTIMEADD,(BYTE *)userinfo.startime.GetBuffer(),STARTIMELEN);
 	memcpy(userdata + ENDTIMEADD,(BYTE *)userinfo.endtime.GetBuffer(),ENDTIMELEN);
 
-	AES::AES_GetFeature((uchar *)(LogInUserName+LogInUserName).GetBuffer(),(LogInUserName+LogInUserName).GetLength(),key);
-	AES::AES_Encryption(key,16,userdata + PORTADD,USERINFOLEN - 9);
+	ret = AES::AES_GetFeature((uchar *)(LogInUserName+LogInUserName).GetBuffer(),(LogInUserName+LogInUserName).GetLength(),key);
+	if(ret != 0){
+		return ret;
+	}
+	ret = AES::AES_Encryption(key,16,userdata + USERSTATUSADD,USERINFOLEN - 9);
+	if(ret != 0){
+		return ret;
+	}
 	return 0;
 }
 
 /*
 用户数据解析
+in:userdata
+out:userinfo
 */
 int CEditUserDlg::UserDataExplan(BYTE *userdata,CUserInfo &userinfo)
 {
+	int ret;
+	BYTE data[15];
+	uchar key[16];
+
+	ret = AES::AES_GetFeature((uchar *)(LogInUserName+LogInUserName).GetBuffer(),(LogInUserName+LogInUserName).GetLength(),key);
+	if(ret != 0){
+		return ret;
+	}
+	memcpy((BYTE *)&(userinfo.status),userdata + STATUSADD,1);
+	memcpy((BYTE *)&(userinfo.userid),userdata + USERIDADD,USERIDLEN);
+	memcpy((BYTE *)&(userinfo.port),userdata + PORTADD,PORTLEN);//以上明文存储
+
+	ret = AES::AES_Decryption(key,16,userdata + USERSTATUSADD,USERINFOLEN - 9);
+	if(ret != 0){
+		return ret;
+	}
+	memcpy((BYTE *)&(userinfo.userstatus),userdata + USERSTATUSADD,USERSTATUSLEN);
+
+	memset(data,0x00,sizeof(data));
+	memcpy((BYTE *)data,userdata + QQNUMADD,QQNUMLEN);
+	userinfo.qqNum.Format("%s",data);//QQ号码
+
+	memset(data,0x00,sizeof(data));
+	memcpy((BYTE *)data,userdata + USERIPADD,USERIPLEN);
+	userinfo.userip.Format("%s",data);//IP
+
+	memset(data,0x00,sizeof(data));
+	memcpy((BYTE *)data,userdata + PASWORDADD,PASWORDLEN);
+	userinfo.password.Format("%s",data);//密码
+
+	memcpy((BYTE *)&(userinfo.amount),userdata + AMOUNTADD,AMOUNTLEN);
+
+	memset(data,0x00,sizeof(data));
+	memcpy((BYTE *)data,userdata + LASTTIMEADD,LASTTIMELEN);
+	userinfo.lasttime.Format("%s",data);//最后缴费时间
+	
+	memset(data,0x00,sizeof(data));
+	memcpy((BYTE *)data,userdata + STARTIMEADD,STARTIMELEN);
+	userinfo.startime.Format("%s",data);//最初缴费时间
+
+	memset(data,0x00,sizeof(data));
+	memcpy((BYTE *)data,userdata + ENDTIMEADD,ENDTIMELEN);
+	userinfo.endtime.Format("%s",data);//最初缴费时间
 	return 0;
 }

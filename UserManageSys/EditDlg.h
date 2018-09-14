@@ -25,6 +25,7 @@ public:
 	void ListAddLine(int line);
 	void ListAddRow(int row,int ID,CString IP,int port,CString Time);
 	CListCtrl m_edit_list;
+	int IDNUM;
 	afx_msg void OnNMRClickEditList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void On1();
 	afx_msg void On2();
