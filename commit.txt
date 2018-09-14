@@ -1,0 +1,11 @@
+﻿修改人：cuilonglong
+修改软件：PC_VS2010_UserManage_ForC
+修改原因：  
+	1.首次上传代码
+
+
+修改文件:
+	ALL
+
+
+
