@@ -12,6 +12,7 @@
 #include "AES.h"
 #include "Debug.h"
 #include "GetNetTime.h"
+#include "EditDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -218,10 +219,13 @@ void CUserManageSysDlg::ShowTabViewForSel(int sel)
     case 0:   //显示查找界面
         m_findDlg.SetWindowPos(NULL, tabRect.left, tabRect.top, tabRect.Width(), tabRect.Height(), SWP_SHOWWINDOW);   
         m_editDlg.SetWindowPos(NULL, tabRect.left, tabRect.top, tabRect.Width(), tabRect.Height(), SWP_HIDEWINDOW);   
+
         break;   
     case 1:   //显示编辑界面
 		m_findDlg.SetWindowPos(NULL, tabRect.left, tabRect.top, tabRect.Width(), tabRect.Height(), SWP_HIDEWINDOW);   
-		m_editDlg.SetWindowPos(NULL, tabRect.left, tabRect.top, tabRect.Width(), tabRect.Height(), SWP_SHOWWINDOW);   
+		m_editDlg.SetWindowPos(NULL, tabRect.left, tabRect.top, tabRect.Width(), tabRect.Height(), SWP_SHOWWINDOW);  
+		
+		m_editDlg.ShowEditListView();
         break;   
     default:   
         break;   

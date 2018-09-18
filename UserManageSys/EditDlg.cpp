@@ -10,7 +10,10 @@
 #include "UserInfo.h"
 #include "EditUserDlg.h"
 #include "AddIPDlg.h"
+#include "UserManageSysDlg.h"
 
+
+extern CString LogInUserName;
 // CEditDlg 对话框
 
 IMPLEMENT_DYNAMIC(CEditDlg, CDialogEx)
@@ -52,12 +55,56 @@ BOOL CEditDlg::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化
 	ListAddLine(4);
-
-	ListAddRow(0,1,"10.12.13.14",8080,"20180930");
-
+	
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }
+
+void CEditDlg::ShowEditListView()//初始化链表控件
+{
+	CFile file;
+	CString password;
+	CUserInfo userinfo;
+	int errnum,time[4],usernum,ret,num;
+
+	m_edit_list.DeleteAllItems();
+	//ListAddRow(0,1111,"10.12.13.14",8080,"20180930");
+	if(LogInUserName == "")//未登录
+	{
+		return;
+	}
+
+	file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	if(ret != 0){
+		::MessageBox( NULL,_T("初始化获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+	if(usernum == 0)//无用户数据
+	{
+		goto Err;
+	}
+	int index = 0;
+	num = 0;
+	do
+	{
+		ret = CEditUserDlg::ReadUserInfo(file,userinfo,num++);
+		if(ret != 0)
+			continue;
+
+		ListAddRow(index,userinfo.userid,userinfo.userip,userinfo.port,userinfo.endtime);
+		index++;
+
+		if(index == usernum)//遍历完成
+			break;
+	}
+	while(index <= USERNUMMAX);
+
+Err:
+	file.Close();
+	return;
+}
+
 
 void CEditDlg::ListAddLine(int line)//为List控件添加列
 {
@@ -132,6 +179,7 @@ void CEditDlg::On1()//新建用户
 	CEditUserDlg edituserdlg;
 	edituserdlg.Buttonstatus = 1;//表示新建用户
 	edituserdlg.DoModal();
+	ShowEditListView();
 }
 
 
@@ -140,7 +188,7 @@ void CEditDlg::On2()//表示删除用户//不需要跳转
 	// TODO: 在此添加命令处理程序代码
 	int ret;
 	CString log;
-	log.Format("确认删除 ID:%04d账户吗？",IDNUM);
+	log.Format("确认删除 ID:%04d 账户吗？",IDNUM);
 	ret = MessageBox( _T(log) , TEXT(TiShi) ,MB_OKCANCEL);
 	if(ret == IDCANCEL)
 	{
@@ -152,11 +200,17 @@ void CEditDlg::On2()//表示删除用户//不需要跳转
 		log.Format("删除 ID:%04d成功！",IDNUM);
 		MessageBox( _T(log) , TEXT(TiShi) ,MB_OK);
 	}
+	else if(ret == 100)
+	{
+		log.Format("删除 ID:%04d失败！\r\nID用户不存在！",IDNUM);
+		MessageBox( _T(log) , TEXT(TiShi) ,MB_OK);
+	}
 	else
 	{
 		log.Format("删除 ID:%04d失败！",IDNUM);
 		MessageBox( _T(log) , TEXT(TiShi) ,MB_OK);
 	}
+	ShowEditListView();
 }
 
 
@@ -166,6 +220,7 @@ void CEditDlg::On3()
 	CEditUserDlg edituserdlg;
 	edituserdlg.Buttonstatus = 3;//表示编辑用户
 	edituserdlg.DoModal();
+	ShowEditListView();
 }
 
 

@@ -54,18 +54,18 @@ BOOL CEditUserDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  在此添加额外的初始化
-	InitComboView();
-	m_datatime_begain.SetFormat(_T("yyyy-MM-dd"));
-	m_datatime_end.SetFormat(_T("yyyy-MM-dd"));
+	InitComboView();//初始化Combo控件
+	InitDatatimeView();//初始化Datatime控件
+	InitEditContrlView();//初始化编辑框控件
 
 	if(Buttonstatus == 1)
 	{
 		GetDlgItem(IDC_EDIT_USER_STATIC)->SetWindowText("新建用户");
 	}
-	else if(Buttonstatus == 2)
-	{
-		GetDlgItem(IDC_EDIT_USER_STATIC)->SetWindowText("删除用户");
-	}
+	//else if(Buttonstatus == 2)
+	//{
+	//	GetDlgItem(IDC_EDIT_USER_STATIC)->SetWindowText("删除用户");
+	//}
 	else if(Buttonstatus == 3)
 	{
 		GetDlgItem(IDC_EDIT_USER_STATIC)->SetWindowText("编辑用户");
@@ -76,6 +76,70 @@ BOOL CEditUserDlg::OnInitDialog()
 	}
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
+}
+
+void CEditUserDlg::InitEditContrlView()//初始化编辑框控件
+{
+	if(Buttonstatus == 1)//新建用户
+	{
+		int ID = 1;
+		CFile file;
+		int num,ret;
+		LONGLONG seek;
+		file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+		do
+		{
+			ret = FindUserInfo(file,1,ID,"",&seek,&num);//查询ID是否可用
+			if(ret != 0)//该ID可用
+			{
+				break;
+			}
+			ID++;
+		}
+		while(ID < USERNUMMAX);
+		file.Close();
+
+		CString IdString;
+		IdString.Format("%04d",ID);
+		SetDlgItemText(IDC_EDITU_ID_EDIT,IdString);
+	}
+	else if(Buttonstatus == 3)//编辑用户
+	{
+		GetDlgItem(IDC_EDITU_ID_EDIT)->EnableWindow(FALSE);//ID设置不可编辑
+	}
+	else if(Buttonstatus == 4)//查看详细信息
+	{
+		GetDlgItem(IDC_EDITU_ID_EDIT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_EDITU_PORT_EDIT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_EDIT_STATUS_COMBO)->EnableWindow(FALSE);
+		GetDlgItem(IDC_EDITU_AMOUNT_EDIT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_EDITU_QQ_EDIT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_EDIT_USER_COMBO)->EnableWindow(FALSE);
+		GetDlgItem(IDC_EDITU_PASSWORD_EDIT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_DATETIMEPICKER1)->EnableWindow(FALSE);
+		GetDlgItem(IDC_DATETIMEPICKER2)->EnableWindow(FALSE);//设置不可编辑
+	}
+}
+
+void CEditUserDlg::InitDatatimeView()//初始化Datatime控件
+{
+	SYSTEMTIME time_begin = { 0 }, time_end = { 0 };
+	
+	m_datatime_begain.SetFormat(_T("yyyy-MM-dd"));
+	m_datatime_end.SetFormat(_T("yyyy-MM-dd"));
+	m_datatime_begain.GetTime(&time_begin);
+	time_end = time_begin;
+	if(time_end.wMonth != 12)
+	{
+		time_end.wMonth += 1;
+	}
+	else
+	{
+		time_end.wMonth = 1;
+		time_end.wYear += 1;  
+	}
+	m_datatime_end.SetTime(time_end);
+	return;
 }
 
 void CEditUserDlg::InitComboView()//初始化combo控件
@@ -135,7 +199,12 @@ void CEditUserDlg::OnBnClickedEditSaveButton()
 	// TODO: 在此添加控件通知处理程序代码
 	int ret;
 	CUserInfo userinfo;
+	SYSTEMTIME time_begin = { 0 }, time_end = { 0 };
 
+	if(Buttonstatus == 4)//详细信息
+	{
+		goto SUCESS;
+	}
 	userinfo.userid = GetDlgItemInt(IDC_EDITU_ID_EDIT);
 	if((userinfo.userid == 0)||(userinfo.userid > 99999))
 	{
@@ -169,23 +238,27 @@ void CEditUserDlg::OnBnClickedEditSaveButton()
 	userinfo.userstatus = m_edit_status_combo.GetCurSel();
 	GetDlgItemText(IDC_EDIT_USER_COMBO,userinfo.userip);
 	
-	SYSTEMTIME time_begin = { 0 }, time_end = { 0 };
 	m_datatime_begain.GetTime(&time_begin);
 	m_datatime_end.GetTime(&time_end);
 	userinfo.endtime.Format("%04d%02d%02d%02d%02d%02d",time_end.wYear,time_end.wMonth,time_end.wDay,
 		time_end.wHour,time_end.wMinute,time_end.wSecond);
 	userinfo.lasttime.Format("%04d%02d%02d%02d%02d%02d",time_begin.wYear,time_begin.wMonth,time_begin.wDay,
 			time_begin.wHour,time_begin.wMinute,time_begin.wSecond);
-	if(Buttonstatus == 1)//新建用户
+	if((Buttonstatus == 1)||(Buttonstatus == 3))//新建或编辑用户
 	{
 		userinfo.startime = userinfo.lasttime;
 		userinfo.status = 1;
 		ret = AddUserInfo(userinfo);
 		if(ret != 0)
-		{
+		{	
+			if(ret == 200)//ID非法
+				::MessageBox( NULL,_T("请输入正确的ID（1~99999）！\r\n\r\n建议使用自动生成ID") , TEXT(TiShi) ,MB_OK);
+
 			goto err;
 		}
 	}
+
+SUCESS:
 	CDialogEx::OnOK();
 err:
 	return;
@@ -205,10 +278,11 @@ void CEditUserDlg::OnBnClickedCancel()
 int CEditUserDlg::AddUserInfo(CUserInfo &userinfo)
 {
 	CFile file;
+	LONGLONG seek;
 	CString password;
-	int errnum,time[4],usernum,ret;
-	BYTE userdata[USERINFOLEN];
 	CUserInfo userinfo1;
+	BYTE userdata[USERINFOLEN];
+	int errnum,time[4],usernum,ret,num;
 	
 	file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
 	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
@@ -216,25 +290,30 @@ int CEditUserDlg::AddUserInfo(CUserInfo &userinfo)
 		::MessageBox( NULL,_T("添加用户获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
 		goto Err;
 	}
-
 	if(usernum >= USERNUMMAX)//用户超过上限
 	{
 		::MessageBox( NULL,_T("用户数量超过上限，请联系管理员！") , TEXT(TiShi) ,MB_OK);
 		ret = 1;
 		goto Err;
 	}
+	
+	ret = FindUserInfo(file,1,userinfo.userid,"",&seek,&num);//查询ID是否可用
+	if(ret == 0)//该ID不可用
+	{
+		ret = 200;
+		goto Err;
+	}
 
 	int index = 0;
 	do
 	{
-		CUserInfo userinfo;
-		if(ReadUserInfo(userinfo,index))//该索引存储用户有效
+		CUserInfo userinfo1;
+		if(!ReadUserInfo(file,userinfo1,index))//该索引可以存储用户
 		{
 			index++;
 		}
 		else
 			break;
-		
 	}
 	while(index < USERNUMMAX);
 
@@ -244,7 +323,6 @@ int CEditUserDlg::AddUserInfo(CUserInfo &userinfo)
 		::MessageBox( NULL,_T("添加用户设置用户个数数据失败！") , TEXT(TiShi) ,MB_OK);
 		goto Err;
 	}
-
 	ret = UserDataPack(userinfo,userdata);
 	if(ret != 0){
 		::MessageBox( NULL,_T("添加用户组包数据失败！") , TEXT(TiShi) ,MB_OK);
@@ -266,6 +344,46 @@ SUCESS:
 
 int CEditUserDlg::DelUserInfo(int ID)
 {
+	CFile file;
+	int num,ret;
+	LONGLONG seek;
+	CString password;
+	CUserInfo userinfo;
+	BYTE userdata[USERINFOLEN];
+	int errnum,time[4],usernum;
+
+	file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+	ret = FindUserInfo(file,1,ID,"",&seek,&num);//查询ID对应的地址
+	if(ret == 0)
+	{
+		userinfo.status = 0;
+		UserDataPack(userinfo,userdata);
+		file.Seek(seek,CFile::begin);
+		file.Write(userdata,USERINFOLEN);
+		ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+		if(ret != 0)
+		{
+			goto Err;
+		}
+		usernum--;
+		ret = CUserManageSysDlg::EditFileHead(file,errnum,time,usernum);
+		if(ret != 0)
+		{
+			goto Err;
+		}
+		goto SUCESS;
+	}
+	else
+	{
+		goto Err;
+	}
+
+Err:
+	file.Close();
+	return ret;	
+SUCESS:
+	//::MessageBox( NULL,_T("删除用户成功！") , TEXT(TiShi) ,MB_OK);
+	file.Close();
 	return 0;
 }
 
@@ -278,21 +396,113 @@ int CEditUserDlg::EditUserInfo(CUserInfo &userinfo)
 }
 
 /*
+遍历查找用户
+in
+	mode:查找根据
+		1：ID
+		2：端口
+		3：QQ
+	ID,Info
+		需要查找的信息
+out
+	seek:返回的用户据对地址
+	num：符合搜索条件的用户个数
+
+ret
+	0:查找成功
+	other：失败
+*/
+int CEditUserDlg::FindUserInfo(CFile &file,int mode,int ID,CString Info,LONGLONG *seek,int *num)
+{
+	//CFile file;
+	CString password;
+	CUserInfo userinfo;
+	BYTE userdata[USERINFOLEN];
+	int errnum,time[4],usernum,ret,	i = 0,j=0;
+	
+	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	if(ret != 0){
+		::MessageBox( NULL,_T("查找用户获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+	if(usernum <= 0)
+	{
+		ret = 100;
+		goto Err;
+	}
+	switch (mode){
+	case 1://ID
+		*seek = USERDATAADD;
+		*num = 0;
+		do
+		{
+			memset(userdata,0x0,USERINFOLEN);
+			file.Seek(*seek + i*USERINFOLEN,CFile::begin);
+			file.Read(userdata,USERINFOLEN);
+			i++;
+			ret = UserDataExplan(userdata,userinfo);
+			if((ret == 0)&&(userinfo.status == 1))//解析成功
+			{
+				if(userinfo.userid == ID)
+				{
+					(*num) += 1;
+					(*seek) += i*USERINFOLEN;
+					goto SUCESS;
+				}
+				else
+				{
+					j++;//读取成功，但不匹配
+				}
+			}
+		}
+		while(j != usernum);
+		if(j == usernum)//未查找到
+		{
+			ret = 100;
+			goto Err;
+		}
+		break;
+
+	case 2://端口
+		ret = 1;
+		goto Err;//先不支持
+		break;
+
+	case 3://QQ
+		ret = 1;
+		goto Err;//先不支持
+		break;
+
+	default:
+		ret = 1;
+		goto Err;
+	}
+Err:
+	//file.Close();
+	return ret;	
+
+SUCESS:
+	//file.Close();
+	return 0;
+}
+
+
+/*
 读取对应地址的用户数据
-seek:绝对偏差地址倍数，从USERDATAADD开始，seek*USERINFOLEN（须从0开始遍历）
+index:绝对偏差地址倍数，从USERDATAADD开始，seek*USERINFOLEN（须从0开始遍历）
 返回 0,存在
 返回 other不存在
 */
-
-int CEditUserDlg::ReadUserInfo(CUserInfo &userinfo,int seek)
+int CEditUserDlg::ReadUserInfo(CFile &file,CUserInfo &userinfo,int index)
 {
 	int ret;
-	CFile file;
+	//CFile file;
 	CString password;
 	BYTE userdata[USERINFOLEN];
 	int errnum,time[4],usernum;
 	
-	file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+	MemsetUserInfo(userinfo);
+	//file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
 	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
 	if(ret != 0){
 		//::MessageBox( NULL,_T("读取用户获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
@@ -303,11 +513,12 @@ int CEditUserDlg::ReadUserInfo(CUserInfo &userinfo,int seek)
 		ret = 1;
 		goto Err;//未存储账户数据
 	}
-	file.Seek(USERDATAADD+ seek*USERINFOLEN,CFile::begin);
+	file.Seek(USERDATAADD+ index*USERINFOLEN,CFile::begin);
 	file.Read(userdata,USERINFOLEN);
 	ret = UserDataExplan(userdata,userinfo);
 	if((ret != 0)||(userinfo.status != 1)){
 		//::MessageBox( NULL,_T("读取用户解析数据失败！") , TEXT(TiShi) ,MB_OK);
+		ret = 2;
 		goto Err;
 	}
 	else if(userinfo.status == 1)
@@ -315,12 +526,12 @@ int CEditUserDlg::ReadUserInfo(CUserInfo &userinfo,int seek)
 		goto SUCESS;
 	}
 Err:
-	file.Close();
+	//file.Close();
 	return ret;
 
 SUCESS:
 	//::MessageBox( NULL,_T("读取用户成功！") , TEXT(TiShi) ,MB_OK);
-	file.Close();
+	//file.Close();
 	return 0;
 }
 
@@ -410,4 +621,21 @@ int CEditUserDlg::UserDataExplan(BYTE *userdata,CUserInfo &userinfo)
 	memcpy((BYTE *)data,userdata + ENDTIMEADD,ENDTIMELEN);
 	userinfo.endtime.Format("%s",data);//最初缴费时间
 	return 0;
+}
+
+
+void CEditUserDlg::MemsetUserInfo(CUserInfo &userinfo)
+{
+	userinfo.status = -1;
+	userinfo.userid = -1;
+	userinfo.port = -1;
+	userinfo.userstatus = -1;
+	userinfo.qqNum = "";
+	userinfo.userip = "";
+	userinfo.password = "";
+	userinfo.amount = -1;
+	userinfo.lasttime = "";
+	userinfo.endtime = "";
+	userinfo.startime =  "";
+	return;
 }

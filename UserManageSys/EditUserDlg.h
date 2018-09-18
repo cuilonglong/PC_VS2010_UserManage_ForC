@@ -33,12 +33,17 @@ public:
 	afx_msg void OnBnClickedEditSaveButton();
 	afx_msg void OnBnClickedCancel();
 	void InitComboView();
+	void InitDatatimeView();
+	void InitEditContrlView();//³õÊ¼»¯±à¼­¿ò¿Ø¼þ
+
 	static int AddUserInfo(CUserInfo &userinfo);
 	static int DelUserInfo(int ID);
 	static int EditUserInfo(CUserInfo &userinfo);
-	static int ReadUserInfo(CUserInfo &userinfo,int seek);
+	static int ReadUserInfo(CFile &file,CUserInfo &userinfo,int index);
+	static int FindUserInfo(CFile &file,int mode,int ID,CString Info,LONGLONG *seek,int *num);
 	static int UserDataPack(CUserInfo &userinfo,BYTE *userdata);
 	static int UserDataExplan(BYTE *userdata,CUserInfo &userinfo);
+	static void MemsetUserInfo(CUserInfo &userinfo);
 
 	CComboBox m_edit_status_combo;
 };

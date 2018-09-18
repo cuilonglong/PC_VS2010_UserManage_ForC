@@ -1,16 +1,19 @@
 ﻿修改人：cuilonglong
 修改软件：PC_VS2010_UserManage_ForC
 修改原因：  
-	1.增加实现用户的增加功能（待测试），读取功能。
-	2.修改删除用户的逻辑。
-	3.优化部分接口。
+	1.完成增加用户的接口开发。
+	2.编辑界面的实现。
 
 
 修改文件:
 	modified:   UserManageSys/EditDlg.cpp
 	modified:   UserManageSys/EditDlg.h
-        	modified:   UserManageSys/EditUserDlg.cpp
-        	modified:   UserManageSys/EditUserDlg.h
+	modified:   UserManageSys/EditUserDlg.cpp
+	modified:   UserManageSys/EditUserDlg.h
+	modified:   UserManageSys/UserDefine.h
+	modified:   UserManageSys/UserInfo.cpp
+	modified:   UserManageSys/UserManageSysDlg.cpp
+
 
 
 

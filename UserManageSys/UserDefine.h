@@ -15,7 +15,7 @@
 #define COMMONDATALEN 4*IPNUMMAX//共用数据存储区
 #define COMMONDATAADD USERINFOHEADLEN
 
-#define USERDATAADD (USERINFOHEADLEN+COMMONDATAADD)//用户数据起始地址
+#define USERDATAADD (COMMONDATALEN+COMMONDATAADD)//用户数据起始地址
 
 
 
@@ -56,7 +56,7 @@
 #define FILLADD (ENDTIMEADD+ENDTIMELEN)//填充数据//14byte//保证数据为16的倍数方便加密
 #define FILLLEN (14*sizeof(BYTE))
 
-#define USERINFOLEN (FILLADD+FILLLEN)//一个用户数据的总的长度
+#define USERINFOLEN (FILLADD+FILLLEN)//一个用户数据的总的长度//121
 
 
 #define TiShi _T("提示")
