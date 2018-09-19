@@ -63,18 +63,18 @@ void CFindDlg::FindViewInit()//初始化界面
 void CFindDlg::OnBnClickedFindButton()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	//CString FindString;
+	CString FindString;
 
-	//GetDlgItemText(IDC_FIND_EDIT,FindString);
-	//if(FindString == "")
-	//{
-	//	MessageBox( TEXT(NInFindInfo) , TEXT(TiShi) ,MB_OK);
-	//	return;
-	//}
+	GetDlgItemText(IDC_FIND_EDIT,FindString);
+	if(FindString == "")
+	{
+		MessageBox( TEXT(NInFindInfo) , TEXT(TiShi) ,MB_OK);
+		return;
+	}
 
-	//MessageBox( TEXT(NFUserInfo) , TEXT(TiShi) ,MB_OK);
+	MessageBox( TEXT(NFUserInfo) , TEXT(TiShi) ,MB_OK);
 
-	SetTimer(1, 1000, NULL); 
+	/*SetTimer(1, 1000, NULL); */
 	return;
 }
 
@@ -83,7 +83,6 @@ void CFindDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	uchar data[100],output[16];
-
 	memset(data,0x55,sizeof(data));
 
 	switch (nIDEvent)   

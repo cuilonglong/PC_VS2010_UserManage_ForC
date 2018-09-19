@@ -219,6 +219,7 @@ void CEditDlg::On3()
 	// TODO: 在此添加命令处理程序代码
 	CEditUserDlg edituserdlg;
 	edituserdlg.Buttonstatus = 3;//表示编辑用户
+	edituserdlg.IDNUM = IDNUM;
 	edituserdlg.DoModal();
 	ShowEditListView();
 }
@@ -229,6 +230,7 @@ void CEditDlg::On4()
 	// TODO: 在此添加命令处理程序代码
 	CEditUserDlg edituserdlg;
 	edituserdlg.Buttonstatus = 4;//表示详细信息
+	edituserdlg.IDNUM = IDNUM;
 	edituserdlg.DoModal();
 }
 

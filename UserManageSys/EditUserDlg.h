@@ -18,7 +18,7 @@ public:
 	enum { IDD = IDD_USERINFO_DIALOG };
 public:
 	int Buttonstatus;//表示按下哪个按钮
-
+	int IDNUM;//表示点击的哪个索引的
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
