@@ -1,4 +1,4 @@
-﻿生成启动时间为 2018/9/19 17:28:08。
+﻿生成启动时间为 2018/9/19 21:26:03。
      1>项目“F:\PC\PC_VS2010_UserManage_ForC\UserManageSys\UserManageSys.vcxproj”在节点 2 上(build 个目标)。
      1>InitializeBuildStatus:
          正在创建“Debug\UserManageSys.unsuccessfulbuild”，因为已指定“AlwaysCreate”。
@@ -19,7 +19,7 @@
          EditDlg.cpp
          正在生成代码...
        ResourceCompile:
-         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _DEBUG /l"0x0804" /IDebug\ /nologo /fo"Debug\UserManageSys.res" UserManageSys.rc 
+         所有输出均为最新。
        ManifestResourceCompile:
          所有输出均为最新。
        Link:
@@ -51,4 +51,4 @@
 
 生成成功。
 
-已用时间 00:00:01.26
+已用时间 00:00:01.27

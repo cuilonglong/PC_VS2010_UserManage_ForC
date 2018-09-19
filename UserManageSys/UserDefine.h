@@ -2,8 +2,8 @@
 #define uchar unsigned char
 #define uint unsigned int
 
-#define IP1 _T("45.63.111.81")
-#define IP2 _T("63.210.148.252")
+//#define IP1 _T("45.63.111.81")
+//#define IP2 _T("63.210.148.252")
 
 #define USERNUMMAX 100//允许存储最多的用户个数
 #define IPNUMMAX 20//允许添加服务器数量的最大值
@@ -35,8 +35,8 @@
 #define QQNUMADD (USERSTATUSADD+USERSTATUSLEN)
 #define QQNUMLEN (15*sizeof(BYTE))//QQ号码//15byte
 
-#define USERIPADD (QQNUMADD+QQNUMLEN)//IP地址//15byte
-#define USERIPLEN (15*sizeof(BYTE))
+#define USERIPADD (QQNUMADD+QQNUMLEN)//IP地址//4byte
+#define USERIPLEN sizeof(int)
 
 #define PASWORDADD (USERIPADD+USERIPLEN)//密码//15byte
 #define PASWORDLEN (15*sizeof(BYTE))
@@ -53,10 +53,10 @@
 #define ENDTIMEADD (STARTIMEADD+STARTIMELEN)//到期时间//15byte
 #define ENDTIMELEN (15*sizeof(BYTE))
 
-#define FILLADD (ENDTIMEADD+ENDTIMELEN)//填充数据//14byte//保证数据为16的倍数方便加密
-#define FILLLEN (14*sizeof(BYTE))
+#define FILLADD (ENDTIMEADD+ENDTIMELEN)//填充数据//9byte//保证数据为16的倍数方便加密
+#define FILLLEN (9*sizeof(BYTE))
 
-#define USERINFOLEN (FILLADD+FILLLEN)//一个用户数据的总的长度//121
+#define USERINFOLEN (FILLADD+FILLLEN)//一个用户数据的总的长度//105
 
 
 #define TiShi _T("提示")

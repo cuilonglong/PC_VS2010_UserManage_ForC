@@ -145,7 +145,7 @@ void CEditUserDlg::InitEditContrlView()//初始化编辑框控件
 		SetDlgItemText(IDC_EDITU_QQ_EDIT,userinfo.qqNum);//显示QQ
 		SetDlgItemText(IDC_EDITU_PASSWORD_EDIT,userinfo.password);//显示密码
 
-		BYTE IP[COMMONDATALEN];
+/*		BYTE IP[COMMONDATALEN];
 		CAddIPDlg::ReadCommonFile(file,&num,IP);
 		for(int i = 0;i < num;i++)
 		{
@@ -155,7 +155,8 @@ void CEditUserDlg::InitEditContrlView()//初始化编辑框控件
 					m_edit_user_combo.SetCurSel(i);
 					break;
 				}
-		} //显示IP
+		}*/ 
+		m_edit_user_combo.SetCurSel(userinfo.userip);//显示IP
 		
 		if((userinfo.startime == "")||(userinfo.endtime == ""))
 		{
@@ -293,8 +294,9 @@ void CEditUserDlg::OnBnClickedEditSaveButton()
 		return;
 	}
 	userinfo.userstatus = m_edit_status_combo.GetCurSel();
-	GetDlgItemText(IDC_EDIT_USER_COMBO,userinfo.userip);
-	
+	//GetDlgItemText(IDC_EDIT_USER_COMBO,userinfo.userip);
+	userinfo.userip = m_edit_user_combo.GetCurSel();//获取IP
+
 	m_datatime_begain.GetTime(&time_begin);
 	m_datatime_end.GetTime(&time_end);
 	userinfo.endtime.Format("%04d%02d%02d%02d%02d%02d",time_end.wYear,time_end.wMonth,time_end.wDay,
@@ -667,7 +669,8 @@ int CEditUserDlg::UserDataPack(CUserInfo &userinfo,BYTE *userdata)
 
 	memcpy(userdata + USERSTATUSADD,(BYTE *)&(userinfo.userstatus),USERSTATUSLEN);
 	memcpy(userdata + QQNUMADD,(BYTE *)userinfo.qqNum.GetBuffer(),QQNUMLEN);
-	memcpy(userdata + USERIPADD,(BYTE *)userinfo.userip.GetBuffer(),USERIPLEN);
+	memcpy(userdata + USERIPADD,(BYTE *)&(userinfo.userip),USERIPLEN);
+	//memcpy(userdata + USERIPADD,(BYTE *)userinfo.userip.GetBuffer(),USERIPLEN);
 	memcpy(userdata + PASWORDADD,(BYTE *)userinfo.password.GetBuffer(),PASWORDLEN);
 	memcpy(userdata + AMOUNTADD,(BYTE *)&(userinfo.amount),AMOUNTLEN);
 	memcpy(userdata + LASTTIMEADD,(BYTE *)userinfo.lasttime.GetBuffer(),LASTTIMELEN);
@@ -714,9 +717,10 @@ int CEditUserDlg::UserDataExplan(BYTE *userdata,CUserInfo &userinfo)
 	memcpy((BYTE *)data,userdata + QQNUMADD,QQNUMLEN);
 	userinfo.qqNum.Format("%s",data);//QQ号码
 
-	memset(data,0x00,sizeof(data));
-	memcpy((BYTE *)data,userdata + USERIPADD,USERIPLEN);
-	userinfo.userip.Format("%s",data);//IP
+	//memset(data,0x00,sizeof(data));
+	//memcpy((BYTE *)data,userdata + USERIPADD,USERIPLEN);
+	//userinfo.userip.Format("%s",data);
+	memcpy((BYTE *)&(userinfo.userip),userdata + USERIPADD,USERIPLEN);//IP
 
 	memset(data,0x00,sizeof(data));
 	memcpy((BYTE *)data,userdata + PASWORDADD,PASWORDLEN);
@@ -746,7 +750,7 @@ void CEditUserDlg::MemsetUserInfo(CUserInfo &userinfo)
 	userinfo.port = -1;
 	userinfo.userstatus = -1;
 	userinfo.qqNum = "";
-	userinfo.userip = "";
+	userinfo.userip = -1;
 	userinfo.password = "";
 	userinfo.amount = -1;
 	userinfo.lasttime = "";

@@ -8,7 +8,7 @@ CUserInfo::CUserInfo()
 	status = 0;
 }
 
-CUserInfo::CUserInfo(int userid1,int port1,int userstatus1,CString qqNum1,CString userip1,
+CUserInfo::CUserInfo(int userid1,int port1,int userstatus1,CString qqNum1,int userip1,
 	CString password1,int amount1,CString lasttime1,CString startime1,CString endtime1)
 {
 	userid = userid1;//ΨһID

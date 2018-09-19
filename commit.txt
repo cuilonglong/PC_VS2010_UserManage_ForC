@@ -1,18 +1,18 @@
 ﻿修改人：cuilonglong
 修改软件：PC_VS2010_UserManage_ForC
 修改原因：  
-	1.完成基本的账户添加、编辑和删除。
-	2.修复删除账户的bug。
+	1.更改IP使用索引。
+	2.添加IP更改。
 
 
 修改文件:
 	modified:   UserManageSys/EditDlg.cpp
+	modified:   UserManageSys/EditDlg.h
 	modified:   UserManageSys/EditUserDlg.cpp
-	modified:   UserManageSys/EditUserDlg.h
-	modified:   UserManageSys/FindDlg.cpp
-	modified:   UserManageSys/UserManageSys.aps
-	modified:   UserManageSys/UserManageSys.rc
-	modified:   UserManageSys/resource.h
+	modified:   UserManageSys/UserDefine.h
+	modified:   UserManageSys/UserInfo.cpp
+	modified:   UserManageSys/UserInfo.h
+
 
 	
 

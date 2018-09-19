@@ -43,6 +43,7 @@ BEGIN_MESSAGE_MAP(CEditDlg, CDialogEx)
 	ON_COMMAND(ID_4, &CEditDlg::On4)
 	ON_COMMAND(ID_5, &CEditDlg::On5)
 	ON_COMMAND(ID_6, &CEditDlg::On6)
+	ON_COMMAND(ID_7, &CEditDlg::On7)
 END_MESSAGE_MAP()
 
 
@@ -68,7 +69,6 @@ void CEditDlg::ShowEditListView()//初始化链表控件
 	int errnum,time[4],usernum,ret,num;
 
 	m_edit_list.DeleteAllItems();
-	//ListAddRow(0,1111,"10.12.13.14",8080,"20180930");
 	if(LogInUserName == "")//未登录
 	{
 		return;
@@ -92,7 +92,7 @@ void CEditDlg::ShowEditListView()//初始化链表控件
 		if(ret != 0)
 			continue;
 
-		ListAddRow(index,userinfo.userid,userinfo.userip,userinfo.port,userinfo.endtime);
+		ListAddRow(index,userinfo.userid,CAddIPDlg::GetCommonIPForSel(file,userinfo.userip),userinfo.port,userinfo.endtime.Left(8));
 		index++;
 
 		if(index == usernum)//遍历完成
@@ -249,5 +249,14 @@ void CEditDlg::On6()//删除ip数据
 	// TODO: 在此添加命令处理程序代码
 	CAddIPDlg addipdlg;
 	addipdlg.status = 1;
+	addipdlg.DoModal();
+}
+
+
+void CEditDlg::On7()//修改IP数据
+{
+	// TODO: 在此添加命令处理程序代码
+	CAddIPDlg addipdlg;
+	addipdlg.status = 2;
 	addipdlg.DoModal();
 }

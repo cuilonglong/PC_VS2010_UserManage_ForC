@@ -22,6 +22,7 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 
+	static CString GetCommonIPForSel(CFile &file,int sel);
 	static int ReadCommonFile(CFile &file,int *num,BYTE *IP);
 	static int AddCommonFile(CFile &file,BYTE *IP);
 	static int DelCommonFile(CFile &file,BYTE *IP);
@@ -29,4 +30,5 @@ public:
 	CIPAddressCtrl m_addip_address;
 	int status;//Ìí¼Ó×´Ì¬
 	afx_msg void OnBnClickedSaveipButton();
+	CIPAddressCtrl m_addip_address1;
 };

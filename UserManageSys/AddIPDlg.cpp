@@ -8,6 +8,7 @@
 #include "Debug.h"
 #include "UserDefine.h"
 #include "UserManageSysDlg.h"
+#include "EditUserDlg.h"
 
 
 extern CString LogInUserName;
@@ -29,6 +30,7 @@ void CAddIPDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_ADDIP_IPADDRESS, m_addip_address);
+	DDX_Control(pDX, IDC_ADDIP1_IPADDRESS, m_addip_address1);
 }
 
 
@@ -55,6 +57,13 @@ BOOL CAddIPDlg::OnInitDialog()
 	else if(status == 1)
 	{
 		GetDlgItem(IDC_EDITIP_STATIC)->SetWindowText("输入需要删除IP：");
+	}
+	else if(status == 2)
+	{
+		GetDlgItem(IDC_EDITIP_STATIC)->SetWindowText("输入需要更改的IP：");
+		GetDlgItem(IDC_EDITIP1_STATIC)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_ADDIP1_IPADDRESS)->ShowWindow(SW_SHOW);
+		m_addip_address1.SetAddress(255,255,255,2);
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -109,8 +118,20 @@ void CAddIPDlg::OnBnClickedSaveipButton()
 			{
 				MessageBox( _T("未发现要删除的IP数据") , TEXT(TiShi) ,MB_OK);
 			}
+			else if(ret == 3)
+			{
+				MessageBox( _T("有账户使用该服务器IP，不允许删除！！") , TEXT(TiShi) ,MB_OK);
+			}
 		}
+		else if(status == 2)//更改IP
+		{
+			BYTE IP1[4];
+			m_addip_address1.GetAddress(IP1[0],IP1[1],IP1[2],IP1[3]);
+			/*
+			添加实现
+			*/
 
+		}
 		if(ret == 0)
 		{
 			MessageBox( _T("操作成功！！！") , TEXT(TiShi) ,MB_OK);
@@ -125,6 +146,18 @@ void CAddIPDlg::OnBnClickedSaveipButton()
 	CDialogEx::OnOK();
 }
 
+
+//根据IP的sel获取IP
+CString CAddIPDlg::GetCommonIPForSel(CFile &file,int sel)
+{
+	int num;
+	BYTE IP[COMMONDATALEN];
+	CString str;
+
+	ReadCommonFile(file,&num,IP);
+	str.Format("%d.%d.%d.%d",IP[sel*4],IP[sel*4+1],IP[sel*4+2],IP[sel*4+3]);
+	return str;
+}
 
 /*
 对公共存储的IP数据读取、添加和删除
@@ -163,6 +196,7 @@ int CAddIPDlg::ReadCommonFile(CFile &file,int *num,BYTE *IP)//传入的指针长度要够
 
 	return 0;
 }
+
 int CAddIPDlg::AddCommonFile(CFile &file,BYTE *IP)
 {
 	int readlen;
@@ -170,22 +204,17 @@ int CAddIPDlg::AddCommonFile(CFile &file,BYTE *IP)
 
 	file.Seek(COMMONDATAADD,CFile::begin);
 	readlen = file.Read(ReadIP,COMMONDATALEN);
+	int contrl = readlen;//控制循环
 	if(readlen == 0)//第一次添加
 	{
 		file.Write(IP,4);
 		return 0;
 	}
-	else if((readlen < COMMONDATALEN)&&(readlen > 0))//第二次之后添加
+	else if((readlen < 0)||(readlen > COMMONDATALEN))
 	{
-		if((readlen % 4) != 0)//文件异常
-		{
-			return -1;
-		}
-		file.Seek(COMMONDATAADD + readlen,CFile::begin);
-		file.Write(IP,4);
-		return 0;
+		return -2;
 	}
-	else if(readlen == COMMONDATALEN)
+	else
 	{
 		readlen = 0;
 		do
@@ -199,7 +228,7 @@ int CAddIPDlg::AddCommonFile(CFile &file,BYTE *IP)
 			}
 			readlen += 4;
 		}
-		while(COMMONDATALEN != readlen);
+		while(contrl != readlen);
 
 		if(COMMONDATALEN == readlen)//存储满了
 		{
@@ -210,28 +239,32 @@ int CAddIPDlg::AddCommonFile(CFile &file,BYTE *IP)
 		file.Write(IP,4);
 		return 0;
 	}
-	else if((readlen < 0)||(readlen > COMMONDATALEN))
-	{
-		return -2;
-	}
+
 	return 0;
 }
+
 int CAddIPDlg::DelCommonFile(CFile &file,BYTE *IP)// 0成功，1失败
 {
 	int readlen;
+	CString password;
+	CUserInfo userinfo;
 	BYTE ReadIP[COMMONDATALEN];
+	int errnum,time[4],usernum,ret,num,ipsel = 0;
 
 	file.Seek(COMMONDATAADD,CFile::begin);
 	readlen = file.Read(ReadIP,COMMONDATALEN);
 	
 	if((readlen % 4) != 0)//文件异常
 	{
-		return -1;
+		ret = -1;
+		goto Err;
 	}
 	if(readlen == 0)
 	{
-		return 1;
+		ret = 1;
+		goto Err;
 	}
+	
 	do
 	{
 		readlen -= 4;
@@ -240,17 +273,67 @@ int CAddIPDlg::DelCommonFile(CFile &file,BYTE *IP)// 0成功，1失败
 		else if((ReadIP[readlen] == IP[0])&&(ReadIP[readlen + 1] == IP[1])&&
 			(ReadIP[readlen + 2] == IP[2])&&(ReadIP[readlen + 3] == IP[3]))//完全相同
 		{
-			memset(ReadIP + readlen,0,4);
-			file.Seek(COMMONDATAADD + readlen,CFile::begin);
-			file.Write(ReadIP + readlen,4);
-			return 0;
+			goto Find;
 		}
 	}
 	while(0 != readlen);
-
-	if(readlen == 0)
+	if(readlen == 0)//不存在该IP
 	{
-		return 2;
+		ret = 2;
+		goto Err;
 	}
+
+Find:
+	//遍历一遍IP未使用才允许删除
+	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	if(ret != 0){
+		::MessageBox( NULL,_T("删除服务器数据获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
+		ret = -2;
+		goto Err;
+	}
+	if(usernum == 0)//无用户数据
+	{
+		goto Scucess;
+	}
+	ret = ReadCommonFile(file,&num,ReadIP);//获取所有的IP数据
+	if(ret != 0)
+	{
+		goto Err;
+	}
+	do//循环查找
+	{
+		if(!memcmp(ReadIP+ipsel*4,IP,4))//相同为0
+		{
+			break;
+		}
+		ipsel++;
+	}
+	while(ipsel < num);
+
+	int index = 0;
+	num = 0;
+	do
+	{
+		ret = CEditUserDlg::ReadUserInfo(file,userinfo,num++);
+		if(ret != 0)
+			continue;
+		if(userinfo.userip == ipsel)
+		{
+			ret =3;
+			goto Err;
+		}
+		index++;
+		if(index == usernum)//遍历完成
+			goto Scucess;
+	}
+	while(index <= USERNUMMAX);
+
+Err:
+	return ret;
+
+Scucess:
+	memset(ReadIP + readlen,0,4);
+	file.Seek(COMMONDATAADD + readlen,CFile::begin);
+	file.Write(ReadIP + readlen,4);
 	return 0;
 }

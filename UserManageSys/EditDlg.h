@@ -35,4 +35,5 @@ public:
 	afx_msg void On6();
 
 	void ShowEditListView();//初始化链表控件
+	afx_msg void On7();
 };

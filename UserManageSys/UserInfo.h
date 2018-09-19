@@ -26,7 +26,7 @@ class CUserInfo
 {
 public:
 	CUserInfo();
-	CUserInfo(int userid1,int port1,int userstatus1,CString qqNum1,CString userip1,
+	CUserInfo(int userid1,int port1,int userstatus1,CString qqNum1,int userip1,
 		CString passworld1,int amount1,CString lasttime1,CString startime1,CString endtime1);
 	~CUserInfo(void);
 
@@ -36,7 +36,7 @@ public:
 	int userstatus;//用户使用状态//4byte
 
 	CString qqNum;//QQ号码//15byte
-	CString userip;//IP地址//15byte
+	int userip;//IP地址//4byte
 	CString password;//密码//15byte
 
 	//缴费详细
