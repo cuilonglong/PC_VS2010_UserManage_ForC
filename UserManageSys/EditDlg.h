@@ -36,4 +36,5 @@ public:
 
 	void ShowEditListView();//初始化链表控件
 	afx_msg void On7();
+	afx_msg void OnNMDblclkEditList(NMHDR *pNMHDR, LRESULT *pResult);
 };

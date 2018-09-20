@@ -1,6 +1,6 @@
 #pragma once
 static CString FileSuffix = ".dat";//文件尾缀
-static int UserStatus = 0;//软件的登陆状态
+//static int UserStatus = 0;//软件的登陆状态
 
 typedef struct _DataHead//数据文件头//更改建议在最后添加不更改上面绝对地址
 {

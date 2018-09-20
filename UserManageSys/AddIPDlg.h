@@ -26,6 +26,9 @@ public:
 	static int ReadCommonFile(CFile &file,int *num,BYTE *IP);
 	static int AddCommonFile(CFile &file,BYTE *IP);
 	static int DelCommonFile(CFile &file,BYTE *IP);
+	static int EditCommonFile(CFile &file,BYTE *IP,BYTE *IP1);
+	static int GetIPSeek(CString IP,int *seek);
+	static int GetIPSeek(CString IP,int *seek,CFile &file);
 
 	CIPAddressCtrl m_addip_address;
 	int status;//Ìí¼Ó×´Ì¬

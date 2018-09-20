@@ -25,7 +25,9 @@ public:
 
 	static int AES_Encryption(unsigned char* key,int keylen,unsigned char* data,int datalen);//加密数据
 	static int AES_Decryption(unsigned char* key,int keylen,unsigned char* data,int datalen);//解密数据
-	static int AES::AES_GetFeature(unsigned char * data,int datalen,unsigned char* out);
+	static int AES_GetFeature(unsigned char * data,int datalen,unsigned char* out);
+	static int Math_Memset(LONGLONG *s,int num,int len);
+
 private:
 	unsigned char Sbox[256];
 	unsigned char InvSbox[256];

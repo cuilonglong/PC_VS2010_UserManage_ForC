@@ -1,5 +1,6 @@
 #pragma once
 #include "afxwin.h"
+#include "afxcmn.h"
 
 // CFindDlg ¶Ô»°¿ò
 
@@ -20,9 +21,13 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
-	void FindViewInit();
+	void ComboViewInit();
+	void ListAddLine(int line);
+	void ListAddRow(int row,int port,int status,CString IP,CString QQ);
+
 	CComboBox m_combo;
 	CEdit m_edit;
 	afx_msg void OnBnClickedFindButton();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CListCtrl m_find_list;
 };

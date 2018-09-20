@@ -127,35 +127,48 @@ void CAddIPDlg::OnBnClickedSaveipButton()
 		{
 			BYTE IP1[4];
 			m_addip_address1.GetAddress(IP1[0],IP1[1],IP1[2],IP1[3]);
-			/*
-			添加实现
-			*/
-
+			ret = EditCommonFile(file,IP,IP1);
+			if(ret == 1)
+			{
+				MessageBox( _T("未查询到需要更改的IP") , TEXT(TiShi) ,MB_OK);
+			}
+			else if(ret == 2)
+			{
+				MessageBox( _T("目标IP已存在,请修改为其它的IP") , TEXT(TiShi) ,MB_OK);
+			}
 		}
+
+		file.Close();
 		if(ret == 0)
 		{
 			MessageBox( _T("操作成功！！！") , TEXT(TiShi) ,MB_OK);
-		}
-		file.Close();
+			goto Scucess;
+		}		
 	}
 	else
 	{
 		MessageBox( _T(ReadFileErr) , TEXT(TiShi) ,MB_OK);
 	}
 	
+	return;
+Scucess:
 	CDialogEx::OnOK();
 }
 
 
 //根据IP的sel获取IP
+//sel代表距离COMMONDATAADD地址
 CString CAddIPDlg::GetCommonIPForSel(CFile &file,int sel)
 {
-	int num;
+	//int num;
 	BYTE IP[COMMONDATALEN];
 	CString str;
 
-	ReadCommonFile(file,&num,IP);
-	str.Format("%d.%d.%d.%d",IP[sel*4],IP[sel*4+1],IP[sel*4+2],IP[sel*4+3]);
+	//ReadCommonFile(file,&num,IP);
+	file.Seek(COMMONDATAADD,CFile::begin);
+	file.Read(IP,COMMONDATALEN);
+
+	str.Format("%d.%d.%d.%d",IP[sel],IP[sel+1],IP[sel+2],IP[sel+3]);
 	return str;
 }
 
@@ -335,5 +348,148 @@ Scucess:
 	memset(ReadIP + readlen,0,4);
 	file.Seek(COMMONDATAADD + readlen,CFile::begin);
 	file.Write(ReadIP + readlen,4);
+	return 0;
+}
+
+int CAddIPDlg::EditCommonFile(CFile &file,BYTE *IP,BYTE *IP1)//编辑IP
+{
+	int readlen,ret,index = 0;
+	BYTE ReadIP[COMMONDATALEN];
+
+	file.Seek(COMMONDATAADD,CFile::begin);
+	readlen = file.Read(ReadIP,COMMONDATALEN);
+	if((readlen % 4) != 0)//文件异常
+	{
+		ret = -1;
+		goto Err;
+	}
+	if(readlen == 0)
+	{
+		ret = 1;//未存储IP
+		goto Err;
+	}
+
+	do//遍历查询是否存在替换的IP1
+	{
+		if(!memcmp(ReadIP+index,IP1,4))//相同为0
+		{
+			ret = 2;
+			goto Err;
+		}
+		index += 4;
+	}
+	while(index != readlen);
+
+	index = 0;
+	do//遍历查询是否存在待替换的IP
+	{
+		if(!memcmp(ReadIP+index,IP,4))//相同为0
+		{
+			file.Seek(COMMONDATAADD + index,CFile::begin);
+			file.Write(IP1,4);
+			goto Scucess;
+		}
+		index += 4;
+	}
+	while(index != readlen);
+	if(index == readlen)
+	{
+		ret = 1;//返回未查找到对应IP
+		goto Err;
+	}
+Err:
+	return ret;
+Scucess:
+	return 0;
+}
+
+/*
+获取IP地址的绝对偏移地址
+seek ：距离COMMONDATAADD的长度
+IP样式必须为"255.255.255.1"样式
+*/
+int CAddIPDlg::GetIPSeek(CString IP,int *seek)
+{
+	CString str;
+	CFile file;
+	int readlen,ret,index = 0;
+	BYTE ReadIP[COMMONDATALEN];
+	
+	file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+	file.Seek(COMMONDATAADD,CFile::begin);
+	readlen = file.Read(ReadIP,COMMONDATALEN);
+	if((readlen % 4) != 0)//文件异常
+	{
+		ret = -1;
+		goto Err;
+	}
+	if(readlen == 0)
+	{
+		ret = 1;//未存储IP
+		goto Err;
+	}
+
+	do//遍历查询是否存在替换的IP1
+	{
+		str.Format("%d.%d.%d.%d",ReadIP[index],ReadIP[index+1],ReadIP[index+2],ReadIP[index+3]);
+		if(str == IP)//查找到
+		{
+			*seek = index;
+			goto Scucess;
+		}
+		index += 4;
+	}
+	while(index != readlen);
+	if(index == readlen)
+		ret =1;//未查到
+
+Err:
+	file.Close();
+	return ret;
+Scucess:
+	file.Close();
+	return 0;
+}
+
+int CAddIPDlg::GetIPSeek(CString IP,int *seek,CFile &file)
+{
+	CString str;
+	//CFile file;
+	int readlen,ret,index = 0;
+	BYTE ReadIP[COMMONDATALEN];
+	
+	//file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+	file.Seek(COMMONDATAADD,CFile::begin);
+	readlen = file.Read(ReadIP,COMMONDATALEN);
+	if((readlen % 4) != 0)//文件异常
+	{
+		ret = -1;
+		goto Err;
+	}
+	if(readlen == 0)
+	{
+		ret = 1;//未存储IP
+		goto Err;
+	}
+
+	do//遍历查询是否存在替换的IP1
+	{
+		str.Format("%d.%d.%d.%d",ReadIP[index],ReadIP[index+1],ReadIP[index+2],ReadIP[index+3]);
+		if(str == IP)//查找到
+		{
+			*seek = index;
+			goto Scucess;
+		}
+		index += 4;
+	}
+	while(index != readlen);
+	if(index == readlen)
+		ret =1;//未查到
+
+Err:
+	//file.Close();
+	return ret;
+Scucess:
+	//file.Close();
 	return 0;
 }

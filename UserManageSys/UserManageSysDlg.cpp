@@ -18,6 +18,7 @@
 #define new DEBUG_NEW
 #endif
 
+int UserStatus = 0;//软件的登陆状态;
 CString LogInUserName = "";//登陆用户的名字
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
@@ -219,6 +220,7 @@ void CUserManageSysDlg::ShowTabViewForSel(int sel)
     case 0:   //显示查找界面
         m_findDlg.SetWindowPos(NULL, tabRect.left, tabRect.top, tabRect.Width(), tabRect.Height(), SWP_SHOWWINDOW);   
         m_editDlg.SetWindowPos(NULL, tabRect.left, tabRect.top, tabRect.Width(), tabRect.Height(), SWP_HIDEWINDOW);   
+		m_findDlg.m_find_list.DeleteAllItems();
 
         break;   
     case 1:   //显示编辑界面

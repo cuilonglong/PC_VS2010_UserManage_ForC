@@ -44,6 +44,7 @@ BEGIN_MESSAGE_MAP(CEditDlg, CDialogEx)
 	ON_COMMAND(ID_5, &CEditDlg::On5)
 	ON_COMMAND(ID_6, &CEditDlg::On6)
 	ON_COMMAND(ID_7, &CEditDlg::On7)
+	ON_NOTIFY(NM_DBLCLK, IDC_EDIT_LIST, &CEditDlg::OnNMDblclkEditList)
 END_MESSAGE_MAP()
 
 
@@ -144,7 +145,7 @@ void CEditDlg::OnNMRClickEditList(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	// TODO: 在此添加控件通知处理程序代码
-	 NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
     
 	DWORD dwPos = GetMessagePos();
 	CPoint point( LOWORD(dwPos), HIWORD(dwPos));
@@ -259,4 +260,32 @@ void CEditDlg::On7()//修改IP数据
 	CAddIPDlg addipdlg;
 	addipdlg.status = 2;
 	addipdlg.DoModal();
+	ShowEditListView();
+}
+
+
+void CEditDlg::OnNMDblclkEditList(NMHDR *pNMHDR, LRESULT *pResult)//响应双击
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+	if(pNMListView->iItem != -1)//有选中
+	{
+		CString idnum = m_edit_list.GetItemText(pNMListView->iItem, 0);//获取选择的ID
+		IDNUM = _ttoi(idnum);//转换成整数
+
+		CEditUserDlg edituserdlg;//开启双击启动详细信息的页面
+		edituserdlg.Buttonstatus = 4;//表示详细信息
+		edituserdlg.IDNUM = IDNUM;
+		edituserdlg.DoModal();
+	}
+	else//未选中任何项
+	{
+		CEditUserDlg edituserdlg;//开启双击空白启动新建用户
+		edituserdlg.Buttonstatus = 1;//表示新建用户
+		edituserdlg.DoModal();
+		ShowEditListView();
+	}
+
+	*pResult = 0;
 }

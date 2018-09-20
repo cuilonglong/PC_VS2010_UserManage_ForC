@@ -406,3 +406,13 @@ END:
 	memcpy(out,datavalue,16);
 	return ret;
 }
+
+int AES::Math_Memset(LONGLONG *s,int num,int len)
+{
+	int i=0;
+	for(i = 0;i<len;i++)
+	{
+		s[i] = num;
+	}
+	return 0;
+}

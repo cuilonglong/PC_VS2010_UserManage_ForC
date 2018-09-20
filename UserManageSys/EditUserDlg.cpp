@@ -83,7 +83,7 @@ void CEditUserDlg::InitEditContrlView()//初始化编辑框控件
 	CFile file;
 	int num,ret;
 	LONGLONG seek;
-	CString showString;
+	CString showString,showString1;
 	CUserInfo userinfo;
 	BYTE userdata[USERINFOLEN];
 
@@ -145,19 +145,24 @@ void CEditUserDlg::InitEditContrlView()//初始化编辑框控件
 		SetDlgItemText(IDC_EDITU_QQ_EDIT,userinfo.qqNum);//显示QQ
 		SetDlgItemText(IDC_EDITU_PASSWORD_EDIT,userinfo.password);//显示密码
 
-/*		BYTE IP[COMMONDATALEN];
-		CAddIPDlg::ReadCommonFile(file,&num,IP);
+		BYTE IP[COMMONDATALEN];
+		CAddIPDlg::ReadCommonFile(file,&num,IP);//获取存取了多少IP
+		file.Seek(COMMONDATAADD,CFile::begin);
+		file.Read(IP,COMMONDATALEN);
+		showString1.Format("%d.%d.%d.%d",IP[userinfo.userip],IP[userinfo.userip+1],IP[userinfo.userip+2],IP[userinfo.userip+3]);
 		for(int i = 0;i < num;i++)
 		{
 			m_edit_user_combo.GetLBText(i,showString);
-			if(showString == userinfo.userip)
-				{
-					m_edit_user_combo.SetCurSel(i);
-					break;
-				}
-		}*/ 
-		m_edit_user_combo.SetCurSel(userinfo.userip);//显示IP
-		
+			if(showString == showString1)
+			{
+				m_edit_user_combo.SetCurSel(i);
+				goto jump;
+			}
+		}//显示IP
+		::MessageBox( NULL,_T("显示IP数据出错，请联系管理员！") , TEXT(TiShi) ,MB_OK);
+		file.Close();
+		return;
+jump:		
 		if((userinfo.startime == "")||(userinfo.endtime == ""))
 		{
 			::MessageBox( NULL,_T("读取时间数据出错，请联系管理员！") , TEXT(TiShi) ,MB_OK);
@@ -256,6 +261,7 @@ void CEditUserDlg::OnBnClickedEditSaveButton()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	int ret;
+	CString ipsting;
 	CUserInfo userinfo;
 	SYSTEMTIME time_begin = { 0 }, time_end = { 0 };
 
@@ -276,7 +282,7 @@ void CEditUserDlg::OnBnClickedEditSaveButton()
 		return;
 	}
 	userinfo.amount = GetDlgItemInt(IDC_EDITU_AMOUNT_EDIT);
-	if(userinfo.amount <= 0)
+	if(userinfo.amount < 0)
 	{
 		::MessageBox( NULL,_T("请输入正确的金额数值！") , TEXT(TiShi) ,MB_OK);
 		return;
@@ -294,8 +300,10 @@ void CEditUserDlg::OnBnClickedEditSaveButton()
 		return;
 	}
 	userinfo.userstatus = m_edit_status_combo.GetCurSel();
-	//GetDlgItemText(IDC_EDIT_USER_COMBO,userinfo.userip);
-	userinfo.userip = m_edit_user_combo.GetCurSel();//获取IP
+	
+	GetDlgItemText(IDC_EDIT_USER_COMBO,ipsting);
+	//userinfo.userip = m_edit_user_combo.GetCurSel();
+	CAddIPDlg::GetIPSeek(ipsting,&(userinfo.userip));//获取IP
 
 	m_datatime_begain.GetTime(&time_begin);
 	m_datatime_end.GetTime(&time_end);
@@ -519,17 +527,19 @@ in
 		1：ID
 		2：端口
 		3：QQ
+		4.过期用户
+		5.IP
 	ID,Info
 		需要查找的信息
 out
-	seek:返回的用户据对地址
+	seek:返回的用户据对地址（除获取ID之外，别的需要传入数组，防止多个符合条件）
 	num：符合搜索条件的用户个数
 
 ret
 	0:查找成功
 	other：失败
 */
-int CEditUserDlg::FindUserInfo(CFile &file,int mode,int ID,CString Info,LONGLONG *seek,int *num)
+int CEditUserDlg::FindUserInfo(CFile &file,int mode,int IntInfo,CString StrInfo,LONGLONG *seek,int *num)
 {
 	//CFile file;
 	CString password;
@@ -547,10 +557,11 @@ int CEditUserDlg::FindUserInfo(CFile &file,int mode,int ID,CString Info,LONGLONG
 		ret = 100;
 		goto Err;
 	}
+
+	*num = 0;
 	switch (mode){
 	case 1://ID
 		*seek = USERDATAADD;
-		*num = 0;
 		do
 		{
 			memset(userdata,0x0,USERINFOLEN);
@@ -560,7 +571,7 @@ int CEditUserDlg::FindUserInfo(CFile &file,int mode,int ID,CString Info,LONGLONG
 			ret = UserDataExplan(userdata,userinfo);
 			if((ret == 0)&&(userinfo.status == 1))//解析成功
 			{
-				if(userinfo.userid == ID)
+				if(userinfo.userid == IntInfo)
 				{
 					(*num) += 1;
 					(*seek) += (i-1)*USERINFOLEN;
@@ -581,15 +592,112 @@ int CEditUserDlg::FindUserInfo(CFile &file,int mode,int ID,CString Info,LONGLONG
 		break;
 
 	case 2://端口
-		ret = 1;
-		goto Err;//先不支持
+		AES::Math_Memset(seek,USERDATAADD,USERNUMMAX);
+		do
+		{
+			memset(userdata,0x0,USERINFOLEN);
+			file.Seek(USERDATAADD + i*USERINFOLEN,CFile::begin);
+			file.Read(userdata,USERINFOLEN);
+			i++;
+			ret = UserDataExplan(userdata,userinfo);
+			if((ret == 0)&&(userinfo.status == 1))//解析成功
+			{
+				j++;//读取成功计数加一
+				if(userinfo.port == IntInfo)
+				{
+					seek[*num] += ((i-1)*USERINFOLEN);
+					(*num) += 1;
+				}
+			}
+		}
+		while(j != usernum);
+		if((j == usernum)&&(*num == 0))//未查找到
+		{
+			ret = 100;
+			goto Err;
+		}
 		break;
 
 	case 3://QQ
-		ret = 1;
-		goto Err;//先不支持
+		AES::Math_Memset(seek,USERDATAADD,USERNUMMAX);
+		do
+		{
+			memset(userdata,0x0,USERINFOLEN);
+			file.Seek(USERDATAADD + i*USERINFOLEN,CFile::begin);
+			file.Read(userdata,USERINFOLEN);
+			i++;
+			ret = UserDataExplan(userdata,userinfo);
+			if((ret == 0)&&(userinfo.status == 1))//解析成功
+			{
+				j++;//读取成功计数加一
+				if(userinfo.qqNum == StrInfo)
+				{
+					seek[*num] += ((i-1)*USERINFOLEN);
+					(*num) += 1;
+				}
+			}
+		}
+		while(j != usernum);
+		if((j == usernum)&&(*num == 0))//未查找到
+		{
+			ret = 100;
+			goto Err;
+		}
 		break;
 
+	case 4://过期用户
+		AES::Math_Memset(seek,USERDATAADD,USERNUMMAX);
+		do
+		{
+			memset(userdata,0x0,USERINFOLEN);
+			file.Seek(USERDATAADD + i*USERINFOLEN,CFile::begin);
+			file.Read(userdata,USERINFOLEN);
+			i++;
+			ret = UserDataExplan(userdata,userinfo);
+			if((ret == 0)&&(userinfo.status == 1))//解析成功
+			{
+				j++;//读取成功计数加一
+				if(userinfo.userstatus == 2)//查询未续费
+				{
+					seek[*num] += ((i-1)*USERINFOLEN);
+					(*num) += 1;
+				}
+			}
+		}
+		while(j != usernum);
+		if((j == usernum)&&(*num == 0))//未查找到
+		{
+			ret = 100;
+			goto Err;
+		}
+		break;
+
+	case 5://IP
+		AES::Math_Memset(seek,USERDATAADD,USERNUMMAX);
+		do
+		{
+			memset(userdata,0x0,USERINFOLEN);
+			file.Seek(USERDATAADD + i*USERINFOLEN,CFile::begin);
+			file.Read(userdata,USERINFOLEN);
+			i++;
+			ret = UserDataExplan(userdata,userinfo);
+			if((ret == 0)&&(userinfo.status == 1))//解析成功
+			{
+				j++;//读取成功计数加一
+				if(userinfo.userip == IntInfo)
+				{
+					seek[*num] += ((i-1)*USERINFOLEN);
+					(*num) += 1;
+				}
+			}
+		}
+		while(j != usernum);
+		if((j == usernum)&&(*num == 0))//未查找到
+		{
+			ret = 100;
+			goto Err;
+		}
+		break;
 	default:
 		ret = 1;
 		goto Err;
