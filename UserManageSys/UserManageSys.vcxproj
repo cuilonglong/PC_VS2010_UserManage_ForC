@@ -99,6 +99,7 @@
     <None Include="res\UserManageSys.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AddAmountDlg.h" />
     <ClInclude Include="AddIPDlg.h" />
     <ClInclude Include="AES.h" />
     <ClInclude Include="Debug.h" />
@@ -117,6 +118,7 @@
     <ClInclude Include="UserManageSysDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AddAmountDlg.cpp" />
     <ClCompile Include="AddIPDlg.cpp" />
     <ClCompile Include="AES.cpp" />
     <ClCompile Include="Debug.cpp" />

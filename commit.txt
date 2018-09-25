@@ -1,19 +1,22 @@
 ﻿修改人：cuilonglong
 修改软件：PC_VS2010_UserManage_ForC
 修改原因：  
-	1.优化IP存储使用偏移地址。
-	2.增加编辑页面双击相应事件。
-	3.添加查找相关的List界面。
-	4.完成查找功能。
+	1.添加查找页面双击功能。
+	2.修改用户详细页面（增加显示三个时间）。
+	3.增加续费功能。
+	4.增加打开软件初始化用户过期信息。
+	5.在查找页面增加右键续费。（目前有点bug，总体功能已完成）
 
 
 修改文件:
 	modified:   UserManageSys/EditDlg.cpp
 	modified:   UserManageSys/EditDlg.h
 	modified:   UserManageSys/EditUserDlg.cpp
-	modified:   UserManageSys/UserDefine.h
-	modified:   UserManageSys/UserInfo.cpp
-	modified:   UserManageSys/UserInfo.h
+	modified:   UserManageSys/EditUserDlg.h
+	modified:   UserManageSys/FindDlg.cpp
+	modified:   UserManageSys/FindDlg.h
+
+
 
 
 	

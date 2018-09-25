@@ -23,11 +23,16 @@ public:
 	virtual BOOL OnInitDialog();
 	void ComboViewInit();
 	void ListAddLine(int line);
-	void ListAddRow(int row,int port,int status,CString IP,CString QQ);
+	void ListAddRow(int row,int ID,int port,int status,CString IP,CString QQ);
 
 	CComboBox m_combo;
 	CEdit m_edit;
+	int IDNUM;
 	afx_msg void OnBnClickedFindButton();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CListCtrl m_find_list;
+	afx_msg void OnNMDblclkFindEditList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnCbnSelchangeFindCombo();
+	afx_msg void OnNMRClickFindEditList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void On8();
 };

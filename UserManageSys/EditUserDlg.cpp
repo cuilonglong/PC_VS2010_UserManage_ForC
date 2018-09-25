@@ -106,9 +106,9 @@ void CEditUserDlg::InitEditContrlView()//初始化编辑框控件
 		showString.Format("%04d",ID);
 		SetDlgItemText(IDC_EDITU_ID_EDIT,showString);
 	}
-	else if((Buttonstatus == 3)||(Buttonstatus == 4))//编辑用户
+	else if((Buttonstatus == 3)||(Buttonstatus == 4))
 	{
-		if(Buttonstatus == 3)
+		if(Buttonstatus == 3)//编辑用户
 		{
 			SetDlgItemText(IDC_EDIT_TIME_STATIC,"续费缴费时间：");
 			GetDlgItem(IDC_EDITU_ID_EDIT)->EnableWindow(FALSE);//ID设置不可编辑
@@ -170,12 +170,29 @@ jump:
 			return;
 		}
 		SYSTEMTIME time_begin = { 0 }, time_end = { 0 };
-		time_begin.wYear = _ttoi(userinfo.startime.Left(4));
 		time_end.wYear = _ttoi(userinfo.endtime.Left(4));//年
-		time_begin.wMonth = _ttoi(userinfo.startime.Mid(4,2));
 		time_end.wMonth = _ttoi(userinfo.endtime.Mid(4,2));//月
-		time_begin.wDay = _ttoi(userinfo.startime.Mid(6,2));
 		time_end.wDay = _ttoi(userinfo.endtime.Mid(6,2));
+
+		if(Buttonstatus == 3)//编辑用户,显示最后一次缴费时间
+		{
+			time_begin.wYear = _ttoi(userinfo.startime.Left(4));
+			time_begin.wMonth = _ttoi(userinfo.startime.Mid(4,2));
+			time_begin.wDay = _ttoi(userinfo.startime.Mid(6,2));
+		}
+		else if(Buttonstatus == 4)//查看详细信息,显示首次续费时间
+		{
+			time_begin.wYear = _ttoi(userinfo.startime.Left(4));
+			time_begin.wMonth = _ttoi(userinfo.startime.Mid(4,2));
+			time_begin.wDay = _ttoi(userinfo.startime.Mid(6,2));
+
+			CString showtime;
+			showtime.Format("最后一次缴费时间：\r\n        %04d年%02d月%02d日",_ttoi(userinfo.lasttime.Left(4)),
+							_ttoi(userinfo.lasttime.Mid(4,2)),_ttoi(userinfo.lasttime.Mid(6,2)));
+			GetDlgItem(IDC_EDIT_INFO_STATIC)->ShowWindow(SW_SHOW);
+			SetDlgItemText(IDC_EDIT_INFO_STATIC,showtime);
+		}
+
 		m_datatime_end.SetTime(time_end);
 		m_datatime_begain.SetTime(time_begin);//显示时间
 		m_edit_status_combo.SetCurSel(userinfo.userstatus);//显示状态
@@ -463,6 +480,7 @@ SUCESS:
 	return 0;
 }
 
+//根据传入数据的ID自动定位修改
 int CEditUserDlg::EditUserInfo(CUserInfo &userinfo)
 {
 	CFile file;
@@ -517,6 +535,64 @@ Err:
 SUCESS:
 	::MessageBox( NULL,_T("修改用户信息成功！") , TEXT(TiShi) ,MB_OK);
 	file.Close();
+	return 0;
+}
+
+//根据传入数据的ID自动定位修改(重载)
+int CEditUserDlg::EditUserInfo(CUserInfo &userinfo,CFile &file)
+{
+	//CFile file;
+	LONGLONG seek;
+	CString password;
+	CUserInfo userinfo1;
+	BYTE userdata[USERINFOLEN];
+	int errnum,time[4],usernum,ret,num;
+	
+	//file.Open(_T(CUserManageSysDlg::GetFilePath()+ LogInUserName + FileSuffix/*文件尾缀*/), CFile::modeReadWrite);
+	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	if(ret != 0){
+		::MessageBox( NULL,_T("修改用户获取用户数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+	if(usernum >= USERNUMMAX)//用户超过上限
+	{
+		::MessageBox( NULL,_T("用户数量超过上限，请联系管理员！") , TEXT(TiShi) ,MB_OK);
+		ret = 1;
+		goto Err;
+	}
+	
+	ret = FindUserInfo(file,1,userinfo.userid,"",&seek,&num);//查询ID是否之前存在
+	if(ret != 0)//该ID不可用
+	{
+		ret = 200;
+		goto Err;
+	}
+
+	if(userinfo.startime == "")//编辑时未传入需要读取原来的
+	{
+		CUserInfo userinfo1;
+		file.Seek(seek,CFile::begin);
+		file.Read(userdata,USERINFOLEN);
+		UserDataExplan(userdata,userinfo1);
+		userinfo.startime = userinfo1.startime;
+	}
+
+	ret = UserDataPack(userinfo,userdata);
+	if(ret != 0){
+		::MessageBox( NULL,_T("修改用户组包数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+	file.Seek(seek,CFile::begin);
+	file.Write(userdata,USERINFOLEN);
+	goto SUCESS;
+
+Err:
+	//file.Close();
+	return ret;
+
+SUCESS:
+	//::MessageBox( NULL,_T("修改用户信息成功！") , TEXT(TiShi) ,MB_OK);
+	//file.Close();
 	return 0;
 }
 
@@ -657,7 +733,7 @@ int CEditUserDlg::FindUserInfo(CFile &file,int mode,int IntInfo,CString StrInfo,
 			if((ret == 0)&&(userinfo.status == 1))//解析成功
 			{
 				j++;//读取成功计数加一
-				if(userinfo.userstatus == 2)//查询未续费
+				if(userinfo.userstatus == IntInfo)//查询未续费
 				{
 					seek[*num] += ((i-1)*USERINFOLEN);
 					(*num) += 1;

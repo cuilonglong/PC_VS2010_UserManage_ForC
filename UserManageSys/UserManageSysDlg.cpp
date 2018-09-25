@@ -13,6 +13,7 @@
 #include "Debug.h"
 #include "GetNetTime.h"
 #include "EditDlg.h"
+#include "EditUserDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -118,6 +119,74 @@ BOOL CUserManageSysDlg::OnInitDialog()
 	m_main_static.SetFont(&m_status_Font,true); 
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+}
+
+/*
+初始化数据时间（登陆后可调用）
+根据当前系统的时间初始化用户的有效性
+仅仅会在使用中和未续费之间切换，不影响停用和试用
+return 
+	0:成功
+	other：失败
+*/
+int CUserManageSysDlg::InitInfoData(CFile &file)//初始化用户信息
+{
+	CString password;
+	CUserInfo userinfo;
+	BYTE userdata[USERINFOLEN];
+	int errnum,time[4],usernum,ret,num,i;
+	
+	ret = CUserManageSysDlg::ExplainFileHead(file,LogInUserName,password,errnum,time,usernum);//获取已经存储的用户个数
+	if(ret != 0){
+		::MessageBox( NULL,_T("初始化用户数据失败！") , TEXT(TiShi) ,MB_OK);
+		goto Err;
+	}
+
+	if(usernum <= 0)
+	{
+		ret = 1;
+		goto Err;
+	}
+
+	//file.Seek(USERDATAADD,CFile::begin);
+	num = 0; i = 0;
+	do
+	{
+		if(!CEditUserDlg::ReadUserInfo(file,userinfo,i++))//0存在
+		{
+			num++;//有效
+			//确认该用户是否过期
+			CTime thistime = CTime::GetCurrentTime();//获取系统当前时间
+			CString thistimestring;
+			thistimestring.Format("%04d%02d%02d%02d%02d%02d",thistime.GetYear(),thistime.GetMonth(),
+				thistime.GetDay(),thistime.GetHour(),thistime.GetMinute(),thistime.GetSecond());
+
+			int result = thistimestring.Compare(userinfo.endtime);//转换为字符串比较两个时间的早晚
+			if((result > 0)&&(userinfo.userstatus == 0))//如果此时的时间已经大于结束时间且存储的状态是使用中
+			{
+				userinfo.userstatus = 2;
+				CEditUserDlg::EditUserInfo(userinfo,file);
+			}
+			else if((result < 0)&&(userinfo.userstatus == 2))//如果此时的时间小于结束时间且存储的状态是未续费
+			{
+				userinfo.userstatus = 0;
+				CEditUserDlg::EditUserInfo(userinfo,file);
+			}
+			//确认该用户是否过期
+
+			if(num == usernum)//遍历完成
+			{
+				goto Success;
+			}
+		}
+	}
+	while(i != USERNUMMAX);
+	ret = 1;
+Err:
+	return ret;
+Success:
+	return 0;
+
 }
 
 void  CUserManageSysDlg::TabViewInit()
@@ -298,6 +367,7 @@ int CUserManageSysDlg::CheckPassWorld()//校验密码
 				GetDlgItem(IDC_MAIN_STATIC)->SetWindowText(statusstring);
 				errnum = 0;
 				EditFileHead(file,errnum,time);//输对之后重置次数
+				InitInfoData(file);//初始化用户数据
 				file.Close();//关闭文件
 				return 0;
 			}

@@ -48,6 +48,7 @@ public:
 	static int ExplainFileHead(CFile &file,CString account,CString & password,int &errnum,int *time,int &usernum);
 	static int EditFileHead(CFile &file,int &errnum,int* time,int usernum = -1);
 	int CheckTimeOut24hour(int *time ,SYSTEMTIME st);
+	int InitInfoData(CFile &file);
 
 	CFindDlg m_findDlg;
 	CEditDlg m_editDlg;

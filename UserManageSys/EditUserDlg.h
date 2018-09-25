@@ -39,6 +39,7 @@ public:
 	static int AddUserInfo(CUserInfo &userinfo);
 	static int DelUserInfo(int ID);
 	static int EditUserInfo(CUserInfo &userinfo);
+	static int EditUserInfo(CUserInfo &userinfo,CFile &file);
 	static int ReadUserInfo(CFile &file,CUserInfo &userinfo,int index);
 	static int FindUserInfo(CFile &file,int mode,int ID,CString Info,LONGLONG *seek,int *num);
 	static int UserDataPack(CUserInfo &userinfo,BYTE *userdata);

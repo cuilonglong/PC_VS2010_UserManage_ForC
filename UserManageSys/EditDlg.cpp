@@ -11,6 +11,7 @@
 #include "EditUserDlg.h"
 #include "AddIPDlg.h"
 #include "UserManageSysDlg.h"
+#include "AddAmountDlg.h"
 
 
 extern CString LogInUserName;
@@ -45,6 +46,7 @@ BEGIN_MESSAGE_MAP(CEditDlg, CDialogEx)
 	ON_COMMAND(ID_6, &CEditDlg::On6)
 	ON_COMMAND(ID_7, &CEditDlg::On7)
 	ON_NOTIFY(NM_DBLCLK, IDC_EDIT_LIST, &CEditDlg::OnNMDblclkEditList)
+	ON_COMMAND(ID_8, &CEditDlg::On8)
 END_MESSAGE_MAP()
 
 
@@ -166,6 +168,9 @@ void CEditDlg::OnNMRClickEditList(NMHDR *pNMHDR, LRESULT *pResult)
 		popup->EnableMenuItem(ID_3,MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);  //不允许删除菜单项使用
 		popup->EnableMenuItem(ID_4,MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);  //不允许菜单项使用
 		popup->EnableMenuItem(ID_5,MF_BYCOMMAND|MF_ENABLED);  //允许添加IP菜单项使用
+		popup->EnableMenuItem(ID_6,MF_BYCOMMAND|MF_ENABLED);  //允许删除IP菜单项使用
+		popup->EnableMenuItem(ID_7,MF_BYCOMMAND|MF_ENABLED);  //允许更改IP菜单项使用
+		popup->EnableMenuItem(ID_8,MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);  //不允许续费菜单项使用
 	}
 	ASSERT( popup != NULL );
 	popup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
@@ -264,6 +269,16 @@ void CEditDlg::On7()//修改IP数据
 }
 
 
+void CEditDlg::On8()//续费用户
+{
+	// TODO: 在此添加命令处理程序代码
+	CAddAmountDlg addamountdlg;
+	addamountdlg.IDNUM = IDNUM;
+	addamountdlg.DoModal();
+	ShowEditListView();
+}
+
+
 void CEditDlg::OnNMDblclkEditList(NMHDR *pNMHDR, LRESULT *pResult)//响应双击
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
@@ -275,7 +290,7 @@ void CEditDlg::OnNMDblclkEditList(NMHDR *pNMHDR, LRESULT *pResult)//响应双击
 		IDNUM = _ttoi(idnum);//转换成整数
 
 		CEditUserDlg edituserdlg;//开启双击启动详细信息的页面
-		edituserdlg.Buttonstatus = 4;//表示详细信息
+		edituserdlg.Buttonstatus = 3;//表示编辑信息
 		edituserdlg.IDNUM = IDNUM;
 		edituserdlg.DoModal();
 	}
@@ -289,3 +304,5 @@ void CEditDlg::OnNMDblclkEditList(NMHDR *pNMHDR, LRESULT *pResult)//响应双击
 
 	*pResult = 0;
 }
+
+
