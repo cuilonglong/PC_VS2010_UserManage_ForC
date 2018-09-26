@@ -209,15 +209,18 @@ void CEditUserDlg::InitDatatimeView()//初始化Datatime控件
 	m_datatime_end.SetFormat(_T("yyyy-MM-dd"));
 	m_datatime_begain.GetTime(&time_begin);
 	time_end = time_begin;
-	if(time_end.wMonth != 12)
-	{
-		time_end.wMonth += 1;
-	}
-	else
-	{
-		time_end.wMonth = 1;
-		time_end.wYear += 1;  
-	}
+	
+	CTime ctime_end(time_end);//构建成ctime类型
+	CTimeSpan timespan(30,0,0,0);//累加三十天
+	ctime_end = ctime_end + timespan;
+
+	time_end.wYear = ctime_end.GetYear();
+	time_end.wMonth = ctime_end.GetMonth();
+	time_end.wDay = ctime_end.GetDay();
+	time_end.wHour = ctime_end.GetHour();
+	time_end.wMinute = ctime_end.GetMinute();
+	time_end.wSecond = ctime_end.GetSecond();
+
 	m_datatime_end.SetTime(time_end);
 	return;
 }
@@ -258,18 +261,19 @@ void CEditUserDlg::OnDtnDatetimechangeDatetimepicker1(NMHDR *pNMHDR, LRESULT *pR
 
 	m_datatime_begain.GetTime(&time_begin);
 	time_end = time_begin;
-	if(time_end.wMonth != 12)
-	{
-		time_end.wMonth += 1;
-	}
-	else
-	{
-		time_end.wMonth = 1;
-		time_end.wYear += 1;  
-	}
+
+	CTime ctime_end(time_end);//构建成ctime类型
+	CTimeSpan timespan(30,0,0,0);//累加三十天
+	ctime_end = ctime_end + timespan;
+
+	time_end.wYear = ctime_end.GetYear();
+	time_end.wMonth = ctime_end.GetMonth();
+	time_end.wDay = ctime_end.GetDay();
+	time_end.wHour = ctime_end.GetHour();
+	time_end.wMinute = ctime_end.GetMinute();
+	time_end.wSecond = ctime_end.GetSecond();
 
 	m_datatime_end.SetTime(time_end);
-
 	*pResult = 0;
 }
 
