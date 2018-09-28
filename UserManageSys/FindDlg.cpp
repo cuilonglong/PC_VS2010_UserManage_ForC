@@ -389,9 +389,11 @@ void CFindDlg::OnNMRClickFindEditList(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CFindDlg::On8()//续费
 {
+	int ret;
 	// TODO: 在此添加命令处理程序代码
 	CAddAmountDlg addamountdlg;
 	addamountdlg.IDNUM = IDNUM;
-	addamountdlg.DoModal();
-	MessageBox( TEXT("续费成功！") , TEXT(TiShi) ,MB_OK);
+	ret = addamountdlg.DoModal();
+	if(ret == IDOK)
+		MessageBox( TEXT("续费成功！") , TEXT(TiShi) ,MB_OK);
 }

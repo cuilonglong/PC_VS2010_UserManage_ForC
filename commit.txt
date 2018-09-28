@@ -1,10 +1,12 @@
 ﻿修改人：cuilonglong
 修改软件：PC_VS2010_UserManage_ForC
 修改原因：  
-	1.修复时间控件粗暴添加一个月导致设置时间不存在而崩溃的bug。
+	1.修复续费取消也会弹出续费成功的提示。
 
 修改文件:
-	modified:   UserManageSys/EditUserDlg.cpp
+	modified:   UserManageSys/FindDlg.cpp	
+	Debug/cuilonglong.dat
+
 
 
 
